@@ -8,6 +8,7 @@ class RedisClient {
   constructor() {
     this.client = createClient();
     this.isConnected = true;
+
     this.client.on('error', (err) => {
       console.log('Redis client not connected to the server: ', err.toString());
       this.isConnected = false;
@@ -16,14 +17,12 @@ class RedisClient {
     this.client.on('connect', () => {
       this.isConnected = true;
     });
-    this.client.connect().catch(err => {
-        console.error('Failed to connect to Redis server:', err);
-        this.isConnected = false;
-      });
+    this.client.connect()
   }
 
   /**
    * check if client connect or not.
+   * @returns {Boolean}
    */
   isAlive() {
     return this.isConnected;
@@ -31,30 +30,30 @@ class RedisClient {
 
   /**
    * Retrieves the value of a given key.
+   * @param {String} key the of item to retrieve.
+   * @returns {String | Object}
    */
   async get(key) {
-    // return promisify(this.client.GET).bind(this.client)(key);
-    const ky = await this.client.get(key)
-    return ky
+    return promisify(this.client.GET).bind(this.client)(key);
   }
 
   /**
    * set key value with duration is second.
+   * @param {String} key of item store
+   * @param {String | Number | Boolean} value of item store
+   * @param {*} duration The expiration time of items is seconds.
    */
   async set(key, value, duration) {
     await promisify(this.client.SETEX).bind(this.client)(key, duration, value);
-    // await this.client.setEx(key, duration, value);
-    // await this.client.set(key,value, { EX: duration })
-  
-}
+  }
 
   /**
    * delete an item is stored.
+   * @param {String} key od an item.
    */
   async del(key) {
     await promisify(this.client.DEL).bind(this.client)(key);
-    // await this.client.del(key);
-}
+  }
 }
 
 const redisClient = new RedisClient();
